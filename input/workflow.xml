@@ -1,0 +1,39 @@
+<!-- This is a comment -->
+<workflow-app xmlns = "uri:oozie:workflow:0.4" name = "combined-workflow">
+   <start to = "spark_pi" />
+
+   <action name='spark_pi'>
+      <spark xmlns="uri:oozie:spark-action:0.1">
+         <job-tracker>${jobTracker}</job-tracker>
+         <name-node>${nameNode}</name-node>
+         <prepare>
+            <delete path="${nameNode}/user/jmontenaro/spark_pi/output-data"/>
+         </prepare>
+         <master>${master}</master>
+         <mode>${mode}</mode>
+         <name>spark_pi</name>
+         <class>org.apache.spark.examples.SparkPi</class>
+         <jar>example_spark_jobs/jobs/pi.scala</jar>
+         <spark-opts>--executor-memory 2G --num-executors 5</spark-opts>
+         <arg>value=10</arg>
+      </spark>
+      <ok to="show_databases" />
+      <error to="kill_job" />
+   </action>
+
+   <action name = "show_databases">
+      <hive xmlns = "uri:oozie:hive-action:0.4">
+         <job-tracker>${jobTracker}</job-tracker>
+         <name-node>${nameNode}</name-node>
+         <script>${script_show_databases}</script>
+      </hive>
+      <ok to = "end" />
+      <error to = "kill_job" />
+   </action>
+   
+   <kill name = "kill_job">
+      <message>Job failed</message>
+   </kill>
+
+   <end name = "end" />
+</workflow-app>
